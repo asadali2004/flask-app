@@ -1,5 +1,6 @@
 pipeline {
     agent any
+
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub')
         AWS_CREDS = credentials('aws-creds')
@@ -9,32 +10,34 @@ pipeline {
         stage('Clone') {
             steps {
                 git branch: 'main', url: 'https://github.com/asadali2004/flask-app.git'
-
             }
         }
+
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t asadali2004/flask-app:latest .'
+                bat 'docker build -t asadali2004/flask-app:latest .'
             }
         }
+
         stage('Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                      docker push asadali2004/flask-app:latest
-                    '''
+                    bat """
+                        echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                        docker push asadali2004/flask-app:latest
+                    """
                 }
             }
         }
+
         stage('Terraform Deploy') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    sh '''
-                      cd terraform
-                      terraform init
-                      terraform apply -auto-approve
-                    '''
+                    bat """
+                        cd terraform
+                        terraform init
+                        terraform apply -auto-approve
+                    """
                 }
             }
         }
