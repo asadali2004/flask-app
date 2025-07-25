@@ -41,5 +41,19 @@ pipeline {
                 }
             }
         }
+
+        stage('Terraform Destroy') {
+            steps {
+                input message: 'Do you want to destroy the infrastructure?', ok: 'Yes, Destroy'
+                withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    bat '''
+                        cd terraform
+                        terraform destroy -auto-approve
+                    '''
+                }
+            }
+        }
+
     }
+
 }
